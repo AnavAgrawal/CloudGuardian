@@ -7,75 +7,77 @@ from sklearn.ensemble import IsolationForest
 import uuid
 import os
 from datetime import datetime
-# Add these imports at the top
-import pandas as pd
-import numpy as np
-from sklearn.ensemble import IsolationForest
 import pickle
 
-# Load the sample dataset and model
+# Initialize data and model
+
+
 def load_data_and_model():
-    # Load sample dataset
     sample_df = pd.read_csv("data/sample_data.csv")
-    
-    # Load trained model
     with open("models/best_model.pkl", "rb") as f:
         model = pickle.load(f)
-    
     return sample_df, model
 
-# Initialize data and model
+
 sample_df, model = load_data_and_model()
 current_row_index = 0
 
-
-# Initialize the Dash app with a modern theme
 app = dash.Dash(
     __name__,
-    external_stylesheets=[dbc.themes.FLATLY],
-    meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
+    external_stylesheets=[dbc.themes.BOOTSTRAP],
+    meta_tags=[{"name": "viewport",
+                "content": "width=device-width, initial-scale=1"}],
 )
 
-# Modern color scheme
 COLORS = {
     'background': '#F8F9FA',
-    'text': '#212529',
-    'primary': '#0D6EFD',
-    'success': '#198754',
-    'danger': '#DC3545',
-    'warning': '#FFC107',
+    'text': '#2C3E50',
+    'primary': '#3498DB',
+    'success': '#2ECC71',
+    'danger': '#E74C3C',
+    'warning': '#F1C40F',
     'card': '#FFFFFF',
+    'accent': '#9B59B6'
 }
+
 
 def create_card(title, content, color_class="primary"):
     """Helper function to create consistent card styling"""
     return dbc.Card(
         [
-            dbc.CardHeader(html.H4(title, className=f"text-{color_class}")),
+            dbc.CardHeader(
+                html.H4(
+                    title,
+                    className=f"text-{color_class} text-center"
+                )
+            ),
             dbc.CardBody(content),
         ],
         className="shadow-sm mb-4",
     )
 
-# Layout with modern styling
+
 app.layout = dbc.Container(
     [
-        # Header
-        html.Div(
-            [
-                html.H1("CloudGuardian", className="display-4 mb-2"),
-                html.P(
-                    "Real-time anomaly detection and threat analysis",
-                    className="lead text-muted",
-                ),
-                html.Hr(),
-            ],
-            className="text-center my-4",
-        ),
-        
-        # Control Panel
+        # Top Row with Header and Control Panel
         dbc.Row(
             [
+                # Header on Left
+                dbc.Col(
+                    html.Div(
+                        [
+                            html.H1("CloudGuardian",
+                                    className="display-4 fw-bold"),
+                            html.P(
+                                "Real-time anomaly detection and threat analysis",
+                                className="lead text-muted",
+                            ),
+                        ],
+                    ),
+                    md=8,
+                ),
+
+                # Control Panel on Right
                 dbc.Col(
                     create_card(
                         "Control Panel",
@@ -84,115 +86,135 @@ app.layout = dbc.Container(
                                 "Start Scanning",
                                 id="start-btn",
                                 color="success",
-                                className="me-2",
+                                className="me-2 px-4 py-2 rounded-pill",
+                                size="lg",
                             ),
                             dbc.Button(
                                 "Stop Scanning",
                                 id="stop-btn",
                                 color="danger",
+                                className="px-4 py-2 rounded-pill",
+                                size="lg",
                             ),
-                            html.Div(
-                                id="processing-info",
-                                className="mt-3 text-muted",
+                            dbc.Spinner(
+                                html.Div(
+                                    id="processing-info",
+                                    className="mt-3 text-muted",
+                                ),
+                                color="primary",
+                                type="grow",
                             ),
                         ],
                     ),
-                    md=12,
+                    md=4,
                 ),
-            ]
+            ],
+            className="mb-4",
         ),
 
-        # Data Tables
+        # Main Content Row
         dbc.Row(
             [
-                # Normal Events
+                # Left Column for Tables
                 dbc.Col(
-                    create_card(
-                        "Normal Events",
-                        dash_table.DataTable(
-                            id="normal-table",
-                            columns=[
-                                {"name": "Event ID", "id": "row_id"},
-                                {"name": "Event Type", "id": "eventId"},
-                                {"name": "Arguments", "id": "argsNum"},
-                                {"name": "Timestamp", "id": "timestamp"},
-                            ],
-                            style_table={"overflowX": "auto"},
-                            style_cell={
-                                "textAlign": "left",
-                                "padding": "15px",
-                                "backgroundColor": COLORS["card"],
-                            },
-                            style_header={
-                                "backgroundColor": COLORS["primary"],
-                                "color": "white",
-                                "fontWeight": "bold",
-                            },
-                            style_data_conditional=[
-                                {
-                                    "if": {"row_index": "odd"},
-                                    "backgroundColor": "#f8f9fa",
-                                }
-                            ],
-                            page_size=5,
+                    [
+                        # Normal Events Table
+                        create_card(
+                            "Normal Events",
+                            dash_table.DataTable(
+                                id="normal-table",
+                                columns=[
+                                    {"name": "Event ID", "id": "row_id"},
+                                    {"name": "Event Type", "id": "eventId"},
+                                    {"name": "Arguments", "id": "argsNum"},
+                                    {"name": "Timestamp", "id": "timestamp"},
+                                ],
+                                style_table={
+                                    "overflowX": "auto",
+                                    "overflowY": "auto",
+                                    "borderRadius": "8px",
+                                    "height": "250px",
+                                },
+                                style_cell={
+                                    "textAlign": "left",
+                                    "padding": "12px",
+                                    "backgroundColor": COLORS["card"],
+                                    "fontFamily": "system-ui",
+                                },
+                                style_header={
+                                    "backgroundColor": COLORS["success"],
+                                    "color": "white",
+                                    "fontWeight": "bold",
+                                    "textTransform": "uppercase",
+                                },
+                                style_data_conditional=[
+                                    {
+                                        "if": {"row_index": "odd"},
+                                        "backgroundColor": "#f8f9fa",
+                                    }
+                                ],
+                                page_size=5,
+                            ),
+                            "success",
                         ),
-                        "success",
-                    ),
-                    md=6,
-                ),
-                
-                # Suspicious Events
-                dbc.Col(
-                    create_card(
-                        "Suspicious Events",
-                        dash_table.DataTable(
-                            id="suspicious-table",
-                            columns=[
-                                {"name": "Event ID", "id": "row_id"},
-                                {"name": "Event Type", "id": "eventId"},
-                                {"name": "Arguments", "id": "argsNum"},
-                                {"name": "Timestamp", "id": "timestamp"},
-                            ],
-                            style_table={"overflowX": "auto"},
-                            style_cell={
-                                "textAlign": "left",
-                                "padding": "15px",
-                                "backgroundColor": COLORS["card"],
-                            },
-                            style_header={
-                                "backgroundColor": COLORS["danger"],
-                                "color": "white",
-                                "fontWeight": "bold",
-                            },
-                            style_data_conditional=[
-                                {
-                                    "if": {"row_index": "odd"},
-                                    "backgroundColor": "#f8f9fa",
-                                }
-                            ],
-                            page_size=5,
-                        ),
-                        "danger",
-                    ),
-                    md=6,
-                ),
-            ]
-        ),
 
-        # Event Details
-        dbc.Row(
-            [
+                        # Suspicious Events Table
+                        create_card(
+                            "Suspicious Events",
+                            dash_table.DataTable(
+                                id="suspicious-table",
+                                columns=[
+                                    {"name": "Event ID", "id": "row_id"},
+                                    {"name": "Event Type", "id": "eventId"},
+                                    {"name": "Arguments", "id": "argsNum"},
+                                    {"name": "Timestamp", "id": "timestamp"},
+                                ],
+                                style_table={
+                                    "overflowX": "auto",
+                                    "overflowY": "auto",
+                                    "borderRadius": "8px",
+                                    "height": "250px",
+                                },
+                                style_cell={
+                                    "textAlign": "left",
+                                    "padding": "12px",
+                                    "backgroundColor": COLORS["card"],
+                                    "fontFamily": "system-ui",
+                                },
+                                style_header={
+                                    "backgroundColor": COLORS["danger"],
+                                    "color": "white",
+                                    "fontWeight": "bold",
+                                    "textTransform": "uppercase",
+                                },
+                                style_data_conditional=[
+                                    {
+                                        "if": {"row_index": "odd"},
+                                        "backgroundColor": "#f8f9fa",
+                                    }
+                                ],
+                                page_size=5,
+                            ),
+                            "danger",
+                        ),
+                    ],
+                    md=6,
+                ),
+
+                # Right Column for Event Details
                 dbc.Col(
                     create_card(
                         "Event Details",
                         html.Div(
                             id="selected-row-details",
                             className="p-3",
+                            style={
+                                "height": "calc(100vh - 250px)", "overflowY": "auto"}
                         ),
                     ),
-                    md=12,
+                    md=6,
                 ),
-            ]
+            ],
         ),
 
         # Hidden components
@@ -204,13 +226,15 @@ app.layout = dbc.Container(
     ],
     fluid=True,
     className="px-4 py-3",
+    style={"maxWidth": "1800px", "margin": "0 auto", "height": "100vh"}
 )
 
-# Callbacks remain mostly the same, but with added timestamp
+# Callbacks
+
+
 @app.callback(
     Output("stream-interval", "disabled"),
-    [Input("start-btn", "n_clicks"),
-     Input("stop-btn", "n_clicks")],
+    [Input("start-btn", "n_clicks"), Input("stop-btn", "n_clicks")],
     [State("stream-interval", "disabled")]
 )
 def toggle_interval(start_n, stop_n, current_state):
@@ -224,13 +248,15 @@ def toggle_interval(start_n, stop_n, current_state):
         return True
     return current_state
 
+
 @app.callback(
     Output("scanning", "data"),
     [Input("stream-interval", "disabled")]
 )
 def update_scanning_state(disabled):
     return not disabled
-# Modify the process_row callback
+
+
 @app.callback(
     [Output("current-index", "data"),
      Output("normal-rows", "data"),
@@ -243,65 +269,57 @@ def update_scanning_state(disabled):
      State("suspicious-rows", "data")]
 )
 def process_row(n_intervals, scanning, current_idx, normal_data, suspicious_data):
-    global current_row_index
-    
+    global current_row_index, sample_df
+
     if not scanning:
         return current_idx, normal_data, suspicious_data, ""
 
     if current_row_index >= len(sample_df):
-        current_row_index = 0  # Reset to beginning
-        return current_idx, normal_data, suspicious_data, "Completed scanning all rows. Starting over..."
+        current_row_index = 0
+        return current_idx, normal_data, suspicious_data, "Completed scanning all rows."
 
-    # Get current row
     row = sample_df.iloc[current_row_index]
-    
-    # Prepare features for model prediction
-    features = np.array([[
-        row["processId"], 
-        row["parentProcessId"], 
+    features = pd.DataFrame([[
+        row["processId"],
+        row["parentProcessId"],
         row["userId"],
-        row["mountNamespace"], 
-        row["eventId"], 
-        row["argsNum"], 
+        row["mountNamespace"],
+        row["eventId"],
+        row["argsNum"],
         row["returnValue"]
-    ]])
-    
-    # Get model prediction
+    ]], columns=["processId", "parentProcessId", "userId", "mountNamespace",
+                 "eventId", "argsNum", "returnValue"])
+
     prediction = model.predict(features)[0]
-    
-    # Create item for display
+
     item = {
         "row_id": str(current_row_index),
+        "processId": int(row["processId"]),
+        "parentProcessId": int(row["parentProcessId"]),
+        "threadId": int(row["threadId"]),
+        "processName": str(row["processName"]),
+        "userId": int(row["userId"]),
+        "mountNamespace": int(row["mountNamespace"]),
+        "hostName": str(row["hostName"]),
         "eventId": int(row["eventId"]),
         "argsNum": int(row["argsNum"]),
         "timestamp": datetime.now().strftime("%H:%M:%S"),
-        "sus": 1 if prediction == -1 else 0,  # Convert Isolation Forest prediction to binary
-        "processId": int(row["processId"]),
-        "userId": int(row["userId"]),
-        "returnValue": int(row["returnValue"])
+        "sus": prediction
     }
 
-    # Add to appropriate list
-    if prediction == 1:  # Normal
+    if prediction == 0:
         normal_data.append(item)
-        normal_data = normal_data[-5:]  # Keep last 5 rows
-        status_color = COLORS['success']
-    else:  # Suspicious
+        normal_data = normal_data[-5:]
+    else:
         suspicious_data.append(item)
-        suspicious_data = suspicious_data[-5:]  # Keep last 5 rows
-        status_color = COLORS['danger']
+        suspicious_data = suspicious_data[-5:]
 
-    # Update info message
-    info_msg = html.Div([
-        html.Span(f"Processing row {current_row_index + 1}/{len(sample_df)}", 
-                 style={"color": COLORS['muted_text']}),
-        html.Br(),
-        html.Span(f"Event ID: {item['eventId']} → {'Normal' if prediction == 1 else 'Suspicious'}", 
-                 style={"color": status_color})
-    ])
+    info_msg = f"Processing row {current_row_index +
+                                 1}/{len(sample_df)} - Event ID: {item['eventId']}"
 
     current_row_index += 1
     return current_idx + 1, normal_data, suspicious_data, info_msg
+
 
 @app.callback(
     [Output("normal-table", "data"),
@@ -312,7 +330,7 @@ def process_row(n_intervals, scanning, current_idx, normal_data, suspicious_data
 def update_tables(normal_rows, suspicious_rows):
     return normal_rows, suspicious_rows
 
-# Modify the row details callback to show more information
+
 @app.callback(
     Output("selected-row-details", "children"),
     [Input("normal-table", "active_cell"),
@@ -322,16 +340,14 @@ def update_tables(normal_rows, suspicious_rows):
 )
 def show_row_details(normal_active, suspicious_active, normal_data, suspicious_data):
     if not normal_active and not suspicious_active:
-        return html.P("Select a row to view details", 
-                     style={"color": COLORS['muted_text']})
+        return html.P("Select a row to view details", className="text-muted")
 
     ctx = dash.callback_context
     if not ctx.triggered:
-        return html.P("Select a row to view details", 
-                     style={"color": COLORS['muted_text']})
+        return html.P("Select a row to view details", className="text-muted")
 
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    
+
     if trigger_id == "normal-table" and normal_active:
         row_idx = normal_active["row"]
         row_info = normal_data[row_idx]
@@ -341,27 +357,79 @@ def show_row_details(normal_active, suspicious_active, normal_data, suspicious_d
         row_info = suspicious_data[row_idx]
         alert_color = "danger"
     else:
-        return html.P("Select a row to view details", 
-                     style={"color": COLORS['muted_text']})
+        return html.P("Select a row to view details", className="text-muted")
 
-    return dbc.Alert(
+    return dbc.Card(
         [
-            html.H4(f"Event ID: {row_info['eventId']}", className="alert-heading"),
-            html.Hr(),
-            html.P(f"Process ID: {row_info['processId']}", className="mb-0"),
-            html.P(f"User ID: {row_info['userId']}", className="mb-0"),
-            html.P(f"Arguments Count: {row_info['argsNum']}", className="mb-0"),
-            html.P(f"Return Value: {row_info['returnValue']}", className="mb-0"),
-            html.P(f"Timestamp: {row_info['timestamp']}", className="mb-0"),
-            html.P(f"Status: {'Normal' if row_info['sus'] == 0 else 'Suspicious'}", 
-                  className="mb-0", 
-                  style={"color": COLORS['success'] if row_info['sus'] == 0 else COLORS['danger']})
+            dbc.CardHeader(
+                html.H4(f"Event ID: {row_info['row_id']}",
+                        className="text-center mb-0"),
+                className=f"bg-{alert_color} text-white"
+            ),
+            dbc.CardBody([
+                dbc.Row([
+                    dbc.Col([
+                        dbc.Card([
+                            dbc.CardHeader("Process Information",
+                                           className="fw-bold"),
+                            dbc.CardBody([
+                                html.H6(f"Process ID: {row_info['processId']}",
+                                        className="mb-2"),
+                                html.H6(f"Parent Process ID: {row_info['parentProcessId']}",
+                                        className="mb-2"),
+                                html.H6(f"Thread ID: {row_info['threadId']}",
+                                        className="mb-2"),
+                                html.H6(f"Process Name: {row_info['processName']}",
+                                        className="mb-2"),
+                            ])
+                        ], className="h-100")
+                    ], md=6),
+                    dbc.Col([
+                        dbc.Card([
+                            dbc.CardHeader("System Information",
+                                           className="fw-bold"),
+                            dbc.CardBody([
+                                html.H6(f"User ID: {row_info['userId']}",
+                                        className="mb-2"),
+                                html.H6(f"Mount Namespace: {row_info['mountNamespace']}",
+                                        className="mb-2"),
+                                html.H6(f"Host Name: {row_info['hostName']}",
+                                        className="mb-2"),
+                                html.H6(f"Event ID: {row_info['eventId']}",
+                                        className="mb-2"),
+                            ])
+                        ], className="h-100")
+                    ], md=6),
+                ], className="mb-3"),
+                dbc.Row([
+                    dbc.Col([
+                        dbc.Card([
+                            dbc.CardHeader("Event Status",
+                                           className="fw-bold"),
+                            dbc.CardBody([
+                                html.H6(f"Timestamp: {row_info['timestamp']}",
+                                        className="mb-2"),
+                                html.H6(
+                                    f"Status: {
+                                        'Normal' if row_info['sus'] == 0 else 'Suspicious'}",
+                                    className="mb-2",
+                                    style={
+                                        "color": COLORS['success']
+                                        if row_info['sus'] == 0
+                                        else COLORS['danger'],
+                                        "fontWeight": "bold"
+                                    }
+                                ),
+                            ])
+                        ])
+                    ])
+                ])
+            ])
         ],
-        color=alert_color,
-        className="mt-3",
-        style={"background-color": COLORS['card_bg'], 
-               "border-color": COLORS[alert_color]}
+        className="mt-3 shadow-sm",
+        style={"minWidth": "800px"}
     )
+
 
 if __name__ == "__main__":
     app.run_server(debug=True)

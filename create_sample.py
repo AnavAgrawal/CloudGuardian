@@ -41,7 +41,7 @@ def create_sample_dataset():
     # Get model predictions
     print("Getting model predictions...")
     predictions = model.predict(features)
-    train_df['is_suspicious'] = np.where(predictions == -1, 1, 0)
+    train_df['is_suspicious'] = np.where(predictions == 1, 1, 0)
 
     # Count available samples
     suspicious_available = len(train_df[train_df['is_suspicious'] == 1])
@@ -53,29 +53,29 @@ def create_sample_dataset():
 
     # Calculate sample sizes (targeting 20% suspicious)
     # Try to get 40, but take what's available
-    suspicious_size = min(40, suspicious_available)
-    normal_size = suspicious_size * 4  # Maintain 20% ratio
+    suspicious_size = min(30, suspicious_available)
+    normal_size = suspicious_size * 5  # Maintain 20% ratio
 
     print(f"\nSampling {suspicious_size} suspicious and {
           normal_size} normal entries...")
 
     # Sample from each prediction group
     suspicious_sample = train_df[train_df['is_suspicious'] == 1].sample(
-        n=suspicious_size, random_state=42)
+        n=suspicious_size, random_state=40)
     normal_sample = train_df[train_df['is_suspicious']
-                             == 0].sample(n=normal_size, random_state=42)
+                             == 0].sample(n=normal_size, random_state=40)
 
     # Combine and shuffle
     sample_df = pd.concat([suspicious_sample, normal_sample])
     sample_df = sample_df.sample(
         frac=1.0, random_state=42).reset_index(drop=True)
 
-    # Keep only necessary columns
-    columns_to_keep = [
-        "processId", "parentProcessId", "userId", "mountNamespace",
-        "eventId", "argsNum", "returnValue", "is_suspicious"
-    ]
-    sample_df = sample_df[columns_to_keep]
+    # # # Keep only necessary columns
+    # # columns_to_keep = [
+    # #     "processId", "parentProcessId", "userId", "mountNamespace",
+    # #     "eventId", "argsNum", "returnValue", "is_suspicious"
+    # # ]
+    # sample_df = sample_df[columns_to_keep]
 
     # Save to CSV
     output_path = os.path.join("data", "sample_data.csv")
