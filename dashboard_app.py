@@ -3,13 +3,8 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc, Input, Output, State, dash_table
 import pandas as pd
 import numpy as np
-from sklearn.ensemble import IsolationForest
-import uuid
-import os
 from datetime import datetime
 import pickle
-
-# Initialize data and model
 
 
 def load_data_and_model():

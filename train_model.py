@@ -8,7 +8,6 @@ from sklearn.metrics import precision_recall_fscore_support, roc_curve, auc, con
 import os
 import pickle
 
-# Create directories for saving outputs
 os.makedirs('plots', exist_ok=True)
 os.makedirs('models', exist_ok=True)
 
@@ -142,7 +141,7 @@ def plot_feature_importance(X_train, rf_model):
 
 
 if __name__ == "__main__":
-    # Load datasets
+
     print("Loading datasets...")
     train_df = pd.read_csv("data/labelled_training_data.csv")
     test_df = pd.read_csv("data/labelled_testing_data.csv")
@@ -154,7 +153,6 @@ if __name__ == "__main__":
     X_test, y_test = prepare_dataset(test_df)
     X_val, y_val = prepare_dataset(val_df)
 
-    # Train models
     print("Training models...")
     models = train_models(X_train, y_train)
 
@@ -173,7 +171,6 @@ if __name__ == "__main__":
     plot_confusion_matrices(models, X_test, y_test)
     plot_feature_importance(X_train, models['Random Forest'])
 
-    # Save the best model (based on F1 score)
     best_model_name = max(results.items(), key=lambda x: x[1]['f1'])[0]
     best_model = models[best_model_name]
 

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import pickle
+import random
 
 
 def prepare_dataset(df):
@@ -18,14 +19,12 @@ def prepare_dataset(df):
 
 
 def create_sample_dataset():
-    # Create directories if they don't exist
+
     os.makedirs('data', exist_ok=True)
 
-    # Load original training dataset
     print("Loading training dataset...")
     train_df = pd.read_csv("data/labelled_training_data.csv")
 
-    # Preprocess features
     print("Preprocessing features...")
     train_df = prepare_dataset(train_df)
 
@@ -34,43 +33,40 @@ def create_sample_dataset():
     with open("models/best_model.pkl", "rb") as f:
         model = pickle.load(f)
 
-    # Get features for prediction
     features = train_df[["processId", "parentProcessId", "userId",
                         "mountNamespace", "eventId", "argsNum", "returnValue"]]
 
-    # Get model predictions
     print("Getting model predictions...")
     predictions = model.predict(features)
     train_df['is_suspicious'] = np.where(predictions == 1, 1, 0)
 
-    # Instead of random sampling, let's create the pattern
     suspicious_entries = train_df[train_df['is_suspicious'] == 1]
     normal_entries = train_df[train_df['is_suspicious'] == 0]
 
     # Determine how many complete patterns we can create
     num_suspicious_available = len(suspicious_entries)
-    # Let's create up to 30 patterns
     num_patterns = min(30, num_suspicious_available)
 
     # Create the patterned dataset
     patterned_df = pd.DataFrame()
     for i in range(num_patterns):
-        # Get 6 normal entries
         pattern_normal = normal_entries.sample(n=6, random_state=i)
-        # Get 1 suspicious entry
+
         pattern_suspicious = suspicious_entries.sample(n=1, random_state=i)
+        process_names = ['snapd', 'ps',
+                         'amazon-ssm-agent', 'minergate', 'sh', 'sshd', 'tcpdump']
+        process_name = random.choice(process_names)
+        pattern_suspicious['processName'] = process_name
+
         # Combine in order
         pattern = pd.concat([pattern_normal, pattern_suspicious])
         patterned_df = pd.concat([patterned_df, pattern])
 
-    # Reset index
     patterned_df = patterned_df.reset_index(drop=True)
 
-    # Save to CSV
     output_path = os.path.join("data", "sample_data.csv")
     patterned_df.to_csv(output_path, index=False)
 
-    # Print statistics
     total_rows = len(patterned_df)
     suspicious_count = len(patterned_df[patterned_df['is_suspicious'] == 1])
     suspicious_percentage = (suspicious_count / total_rows) * 100
