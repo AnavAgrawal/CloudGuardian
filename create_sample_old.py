@@ -43,41 +43,51 @@ def create_sample_dataset():
     predictions = model.predict(features)
     train_df['is_suspicious'] = np.where(predictions == 1, 1, 0)
 
-    # Instead of random sampling, let's create the pattern
-    suspicious_entries = train_df[train_df['is_suspicious'] == 1]
-    normal_entries = train_df[train_df['is_suspicious'] == 0]
+    # Count available samples
+    suspicious_available = len(train_df[train_df['is_suspicious'] == 1])
+    normal_available = len(train_df[train_df['is_suspicious'] == 0])
 
-    # Determine how many complete patterns we can create
-    num_suspicious_available = len(suspicious_entries)
-    # Let's create up to 30 patterns
-    num_patterns = min(30, num_suspicious_available)
+    print(f"\nAvailable samples:")
+    print(f"Suspicious: {suspicious_available}")
+    print(f"Normal: {normal_available}")
 
-    # Create the patterned dataset
-    patterned_df = pd.DataFrame()
-    for i in range(num_patterns):
-        # Get 6 normal entries
-        pattern_normal = normal_entries.sample(n=6, random_state=i)
-        # Get 1 suspicious entry
-        pattern_suspicious = suspicious_entries.sample(n=1, random_state=i)
-        # Combine in order
-        pattern = pd.concat([pattern_normal, pattern_suspicious])
-        patterned_df = pd.concat([patterned_df, pattern])
+    # Calculate sample sizes (targeting 20% suspicious)
+    # Try to get 40, but take what's available
+    suspicious_size = min(30, suspicious_available)
+    normal_size = suspicious_size * 9  # Maintain 10% ratio
 
-    # Reset index
-    patterned_df = patterned_df.reset_index(drop=True)
+    print(f"\nSampling {suspicious_size} suspicious and {
+          normal_size} normal entries...")
+
+    # Sample from each prediction group
+    suspicious_sample = train_df[train_df['is_suspicious'] == 1].sample(
+        n=suspicious_size, random_state=40)
+    normal_sample = train_df[train_df['is_suspicious']
+                             == 0].sample(n=normal_size, random_state=40)
+
+    # Combine and shuffle
+    sample_df = pd.concat([suspicious_sample, normal_sample])
+    sample_df = sample_df.sample(
+        frac=1.0, random_state=42).reset_index(drop=True)
+
+    # # # Keep only necessary columns
+    # # columns_to_keep = [
+    # #     "processId", "parentProcessId", "userId", "mountNamespace",
+    # #     "eventId", "argsNum", "returnValue", "is_suspicious"
+    # # ]
+    # sample_df = sample_df[columns_to_keep]
 
     # Save to CSV
     output_path = os.path.join("data", "sample_data.csv")
-    patterned_df.to_csv(output_path, index=False)
+    sample_df.to_csv(output_path, index=False)
 
     # Print statistics
-    total_rows = len(patterned_df)
-    suspicious_count = len(patterned_df[patterned_df['is_suspicious'] == 1])
+    total_rows = len(sample_df)
+    suspicious_count = len(sample_df[sample_df['is_suspicious'] == 1])
     suspicious_percentage = (suspicious_count / total_rows) * 100
 
-    print("\nPatterned Dataset Created:")
+    print("\nSample Dataset Created:")
     print(f"Total Rows: {total_rows}")
-    print(f"Number of complete patterns: {num_patterns}")
     print(f"Suspicious Entries: {
           suspicious_count} ({suspicious_percentage:.1f}%)")
     print(f"Normal Entries: {

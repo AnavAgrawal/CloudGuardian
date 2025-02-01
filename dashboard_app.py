@@ -126,14 +126,14 @@ app.layout = dbc.Container(
                                 columns=[
                                     {"name": "Event ID", "id": "row_id"},
                                     {"name": "Event Type", "id": "eventId"},
-                                    {"name": "Arguments", "id": "argsNum"},
+                                    {"name": "Host Name", "id": "hostName"},
                                     {"name": "Timestamp", "id": "timestamp"},
                                 ],
                                 style_table={
                                     "overflowX": "auto",
                                     "overflowY": "auto",
                                     "borderRadius": "8px",
-                                    "height": "250px",
+                                    "height": "300px",
                                 },
                                 style_cell={
                                     "textAlign": "left",
@@ -166,14 +166,14 @@ app.layout = dbc.Container(
                                 columns=[
                                     {"name": "Event ID", "id": "row_id"},
                                     {"name": "Event Type", "id": "eventId"},
-                                    {"name": "Arguments", "id": "argsNum"},
+                                    {"name": "Host Name", "id": "hostName"},
                                     {"name": "Timestamp", "id": "timestamp"},
                                 ],
                                 style_table={
                                     "overflowX": "auto",
                                     "overflowY": "auto",
                                     "borderRadius": "8px",
-                                    "height": "250px",
+                                    "height": "300px",
                                 },
                                 style_cell={
                                     "textAlign": "left",
@@ -209,7 +209,7 @@ app.layout = dbc.Container(
                             id="selected-row-details",
                             className="p-3",
                             style={
-                                "height": "calc(100vh - 250px)", "overflowY": "auto"}
+                                "height": "calc(85vh - 250px)", "overflowY": "auto"}
                         ),
                     ),
                     md=6,
@@ -308,11 +308,13 @@ def process_row(n_intervals, scanning, current_idx, normal_data, suspicious_data
     }
 
     if prediction == 0:
-        normal_data.append(item)
-        normal_data = normal_data[-5:]
+        normal_data = [item] + normal_data
+        # normal_data.append(item)
+        # normal_data = normal_data[-5:]
     else:
-        suspicious_data.append(item)
-        suspicious_data = suspicious_data[-5:]
+        suspicious_data = [item] + suspicious_data
+        # suspicious_data.append(item)
+        # suspicious_data = suspicious_data[-5:]
 
     info_msg = f"Processing row {current_row_index +
                                  1}/{len(sample_df)} - Event ID: {item['eventId']}"
